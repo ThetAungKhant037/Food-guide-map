@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Food Guide Map</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.locatecontrol@0.74.0/dist/L.Control.Locate.min.css" integrity="sha384-3YI3fbZpMWHA6+G1WxnOMv2SNCN9aaEe1y+5P15lCif4B+L6Go4hvqOsyHquCpSP" crossorigin="anonymous">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    #navbar {
+      background-color: #3498db;
+      padding: 10px;
+      text-align: center;
+      color: white;
+    }
+
+    #map-container {
+      display: flex;
+      height: calc(100vh - 40px);
+    }
+
+    #map {
+      flex: 1;
+      height: 100%;
+    }
+
+    #details-container {
+      width: 300px;
+      background-color: #f1f1f1;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      overflow-y: auto;
+    }
+
+    .popup-content {
+      max-width: 100%;
+    }
+
+    .thumbnail {
+      max-width: 100%;
+      max-height: 180px;
+    }
+
+    #details-container h2 {
+      color: #3498db;
+    }
+
+    #details-container p {
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div id="navbar">
+    <h1>Food Guide Map</h1>
+  </div>
+
+  <div id="map-container">
+    <div id="map"></div>
+    <div id="details-container"></div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.locatecontrol@0.74.0/dist/L.Control.Locate.min.js" integrity="sha384-6NEcTd/nxv+olUi7eQfXo35qea9i+oNzm7+4i5APG3Hxpgz1y6p8CQ1uJxFt5h4h" crossorigin="anonymous"></script>
+  <script>
+    function initMap() {
+      var map = L.map('map').setView([16.810591911528274, 96.13476637895674], 15);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+      }).addTo(map);
+
+      // Load locations from the JSON file
+      fetch('locations.json')
+        .then(response => response.json())
+        .then(locations => {
+          locations.forEach(location => {
+            // Add markers for each location with thumbnail image from URL
+            var marker = L.marker([location.latitude, location.longitude])
+              .addTo(map)
+              .bindPopup(`<b>${location.name}</b><br><img src="${location.thumbnail}" alt="${location.name}" class="thumbnail"><br>${location.description}`)
+              .on('click', function () {
+                // Display details in the details-container div
+                document.getElementById('details-container').innerHTML = `
+                  <h2>${location.name}</h2>
+                  <img src="${location.thumbnail}" alt="${location.name}" class="thumbnail">
+                  <p>${location.description}</p>
+                  <h3>Contact Information</h3>
+                  <p><strong>Email:</strong> ${location.email || 'N/A'}</p>
+                  <p><strong>Phone:</strong> ${location.phone || 'N/A'}</p>
+                `;
+              });
+          });
+        })
+        .catch(error => console.error('Error fetching locations:', error));
+
+      // Add GPS tracking control
+      L.control.locate().addTo(map);
+    }
+
+    // Call initMap on page load
+    initMap();
+  </script>
+</body>
+</html>
